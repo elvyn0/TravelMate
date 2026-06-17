@@ -1,7 +1,7 @@
-const { text } = require("express");
 const Itinerary = require("../models/Itinerary");
 const pdfParse = require("pdf-parse");
 const Tesseract = require("tesseract.js");
+const crypto = require("crypto");
 const { extractBookingData, generateItinerary } = require("../services/ai.service");
 
 // Create itinerary
@@ -29,7 +29,7 @@ const createItinerary = async (req, res) => {
       }
     }
 
-    // Extracting booking deatiles fromt the extracted text
+    // Extracting booking deatiles from the extracted text
     const bookingResponse = await extractBookingData(extractedText);
 
     const extractedData = JSON.parse(bookingResponse);
@@ -134,7 +134,10 @@ const getSharedItinerary = async (req, res) => {
       return res.status(404).json({ success: false, message: "itinerary not found" });
     }
 
-    itinerary.shareId = crypto.randomUUID();
+    // Generating shareId
+    if (!itinerary.shareId) {
+      itinerary.shareId = crypto.randomUUID();
+    }
     itinerary.isPublic = true;
 
     await itinerary.save();
