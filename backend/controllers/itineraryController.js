@@ -84,7 +84,9 @@ const getUserItinerary = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const itineraries = await Itinerary.find().sort({ createdAt: -1 });
+    const itineraries = await Itinerary.find({
+      userId,
+    }).sort({ createdAt: -1 });
 
     return res.status(200).json({ success: true, itineraries });
   } catch (error) {
