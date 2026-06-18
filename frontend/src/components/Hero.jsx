@@ -8,7 +8,7 @@ function Hero() {
           </h1>
         </div>
         <div className="w-full md:min-w-200 p-2">
-          <img className="w-full rounded-4xl" src="../../public/heroimage.jpg" />
+          <img className="w-full rounded-4xl" src="/heroimage.jpg" />
         </div>
       </div>
     </div>
