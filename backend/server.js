@@ -27,8 +27,9 @@ app.use(cookieParser());
 app.use("/api/user", userRouter);
 app.use("/api/itinerary", itineraryRouter);
 
-// cors
-const allowedOrigins = [process.env.FRONTEND_URL];
+app.get("/", (req, res) => {
+  res.send("api working");
+});
 
 // Server listen
 server.listen(port, () => console.log(`Server running  on port: ${port}`));
