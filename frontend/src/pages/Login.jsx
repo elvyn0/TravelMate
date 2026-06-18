@@ -69,7 +69,7 @@ function Login() {
               {/* Name */}
               <label htmlFor="name">Name</label>
               <input
-                className="border w-80 h-10 rounded-lg"
+                className="border w-80 h-10 rounded-lg pl-2"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -82,7 +82,7 @@ function Login() {
           <div className="flex flex-col mt-2">
             <label htmlFor="email">Email</label>
             <input
-              className="border w-80 h-10 rounded-lg"
+              className="border w-80 h-10 rounded-lg pl-2"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -92,7 +92,7 @@ function Login() {
           <div className="flex flex-col mt-2 rounded-lg">
             <label htmlFor="password">Password</label>
             <input
-              className="border w-80 h-10 rounded-lg"
+              className="border w-80 h-10 rounded-lg pl-2"
               value={password}
               onChange={(e) => setPasword(e.target.value)}
               required

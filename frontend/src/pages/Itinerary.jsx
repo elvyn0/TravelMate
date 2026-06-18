@@ -4,7 +4,7 @@ import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 
 function Itinerary() {
-  const { api } = useContext(AppContext);
+  const { api, navigate } = useContext(AppContext);
   const { id } = useParams();
   const [itinerary, setItinerary] = useState(null);
 
@@ -29,6 +29,21 @@ function Itinerary() {
       if (response.data.success) {
         await navigator.clipboard.writeText(`${window.location.origin}${response.data.shareUrl}`);
         toast.success("Share link copied");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Something went wrong");
+    }
+  };
+
+  // Handle delete itinerary
+  const handleDelete = async () => {
+    try {
+      const response = await api.delete(`/api/itinerary/delete/${id}`);
+
+      if (response.data.success) {
+        setItinerary(null);
+        toast.success("Itinerary deleted");
+        navigate("/");
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
@@ -94,11 +109,14 @@ function Itinerary() {
         <div className="flex gap-3 mt-6">
           <button
             onClick={() => handleShare(itinerary._id)}
-            className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-2xl hover:bg-blue-500 transition-all"
+            className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-2xl hover:bg-blue-500 transition-all cursor-pointer"
           >
             Share
           </button>
-          <button className="bg-red-600 text-white font-semibold px-4 py-2 rounded-2xl hover:bg-red-700 transition-all">
+          <button
+            onClick={() => handleDelete(itinerary._id)}
+            className="bg-red-600 text-white font-semibold px-4 py-2 rounded-2xl hover:bg-red-700 transition-all cursor-pointer"
+          >
             Delete
           </button>
           <div>

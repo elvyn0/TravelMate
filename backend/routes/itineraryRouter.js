@@ -14,9 +14,9 @@ const itineraryRouter = express.Router();
 
 itineraryRouter.post("/", userAuth, upload.array("documents", 10), createItinerary);
 itineraryRouter.get("/get/:id", userAuth, getItineraryById);
-itineraryRouter.get("/get/user", getUserItinerary);
-itineraryRouter.get("/shared", getSharedItinerary);
+itineraryRouter.get("/list", userAuth, getUserItinerary);
+itineraryRouter.get("/shared/:shareId", getSharedItinerary);
 itineraryRouter.post("/share/:id", generateShareLink);
-itineraryRouter.delete("/delete/:id", deleteItinerary);
+itineraryRouter.delete("/delete/:id", userAuth, deleteItinerary);
 
 module.exports = itineraryRouter;

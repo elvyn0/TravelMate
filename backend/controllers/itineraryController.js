@@ -128,6 +128,13 @@ const deleteItinerary = async (req, res) => {
     const { id } = req.params;
     const userId = req.user?._id;
 
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
     const itinerary = await Itinerary.findById(id);
 
     if (!itinerary) {
