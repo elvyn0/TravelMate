@@ -39,11 +39,19 @@ const handleRegisterUser = async (req, res) => {
     const hashPassword = await bcrypt.hash(password, salt);
 
     // Creating User
-    const user = await new User({
+    const newUser = await new User({
       name,
       email: normalizedEmail,
       password: hashPassword,
     });
+
+    const user = await newUser.save();
+
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    };
 
     // creating http Only token
     const token = createToken(user._id);
@@ -55,7 +63,7 @@ const handleRegisterUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({ success: true, message: "Registration successful" });
+    res.status(200).json({ success: true, userData, message: "Registration successful" });
   } catch (error) {
     console.log("User Registraion Error:", error);
     res.status(500).json({ success: false, message: error.message });
@@ -72,7 +80,7 @@ const handleUserLogin = async (req, res) => {
     }
 
     // Validating email
-    if (!validator.isEmail(email)) {
+    if (!Validator.isEmail(email)) {
       return res.status(400).json({ success: false, message: "Enter a valid email" });
     }
 
@@ -130,12 +138,9 @@ const handleUserLogout = async (req, res) => {
 };
 
 // Get user Profile
-
 const handleGetUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
-
-    return res.status(200).json({ success: true, user });
+    return res.status(200).json({ success: true, user: req.user });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ success: false, message: error.message });

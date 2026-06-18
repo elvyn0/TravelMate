@@ -12,7 +12,7 @@ const userRouter = express.Router();
 
 userRouter.post("/register", handleRegisterUser);
 userRouter.post("/login", handleUserLogin);
-userRouter.get("/:userId", handleGetUser);
+userRouter.get("/me", userAuth, handleGetUser);
 userRouter.post("/logout", handleUserLogout);
 userRouter.delete("/delete-account", userAuth, handleDeleteUser);
 

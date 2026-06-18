@@ -5,7 +5,7 @@ import UploadForm from "../components/UploadForm";
 
 function Home() {
   return (
-    <div>
+    <div className="flex flex-col gap-3">
       <Header />
       <Hero />
       <UploadForm />

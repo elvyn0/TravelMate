@@ -2,26 +2,27 @@ const Itinerary = require("../models/Itinerary");
 const pdfParse = require("pdf-parse");
 const Tesseract = require("tesseract.js");
 const crypto = require("crypto");
-const { extractBookingData, generateItinerary } = require("../services/ai.service");
+const { generateItinerary } = require("../services/ai.service");
 
 // Create itinerary
 const createItinerary = async (req, res) => {
   try {
     const files = req.files;
 
-    // Priventing empty files
     if (!files || files.length === 0) {
-      return res.status(400).json({ success: false, message: "Please upload at least one file" });
+      return res.status(400).json({
+        success: false,
+        message: "Please upload at least one file",
+      });
     }
 
-    // Extrating Data form files
     let extractedText = "";
 
     for (const file of files) {
       if (file.mimetype === "application/pdf") {
-        const data = await pdfParse(file.buffer);
+        const pdfData = await pdfParse(file.buffer);
 
-        extractedText += data.text + "\n";
+        extractedText += pdfData.text + "\n";
       } else if (file.mimetype.startsWith("image/")) {
         const result = await Tesseract.recognize(file.buffer, "eng");
 
@@ -29,33 +30,49 @@ const createItinerary = async (req, res) => {
       }
     }
 
-    // Extracting booking deatiles from the extracted text
-    const bookingResponse = await extractBookingData(extractedText);
+    if (!extractedText.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Could not extract text from uploaded files",
+      });
+    }
 
-    const extractedData = JSON.parse(bookingResponse);
+    const aiResponse = await generateItinerary(extractedText);
 
-    // Generating itinerary from ai modle
-    const itineraryResponse = await generateItinerary(extractedData);
+    const cleanedResponse = aiResponse
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
 
-    const itinerary = JSON.parse(itineraryResponse);
+    const itineraryData = JSON.parse(cleanedResponse);
 
-    // Saving itinerary to model db
     const newItinerary = await Itinerary.create({
       userId: req.user._id,
-      title: itinerary.title,
-      extractedData,
-      itinerary,
+      title: itineraryData.title || "Untitled Trip",
+      extractedData: itineraryData.extractedData || {},
+      itinerary: itineraryData,
       uploadedFiles: files.map((file) => ({
         fileName: file.originalname,
         fileType: file.mimetype,
       })),
     });
 
-    res.status(200).json({ success: true, itinerary: newItinerary });
+    return res.status(201).json({
+      success: true,
+      itineraryId: newItinerary._id,
+    });
   } catch (error) {
-    console.error("itinerary Creation Error:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Itinerary Creation Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
+};
+
+module.exports = {
+  createItinerary,
 };
 
 // Get user itinerary
@@ -80,20 +97,23 @@ const getUserItinerary = async (req, res) => {
 const getItineraryById = async (req, res) => {
   try {
     const { id } = req.params;
+
     const userId = req.user._id;
 
     const itinerary = await Itinerary.findById(id);
 
     if (!itinerary) {
-      return res.status(404).json({ success: false, message: "itinerary not found" });
+      return res.status(404).json({ success: false, message: "Itinerary not found" });
     }
 
+    // Verify ownership
     if (itinerary.userId.toString() !== userId.toString()) {
-      return res.status(403).json({ success: false, message: "Not authorized" });
+      return res.status(403).json({ success: false, message: "Not authorized to view this itinerary" });
     }
 
     res.status(200).json({ success: true, itinerary });
   } catch (error) {
+    console.error("Error fetching itinerary:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -102,7 +122,7 @@ const getItineraryById = async (req, res) => {
 const deleteItinerary = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user._id;
+    const userId = req.user?._id;
 
     const itinerary = await Itinerary.findById(id);
 
@@ -151,9 +171,8 @@ const getSharedItinerary = async (req, res) => {
 // Generate share link
 const generateShareLink = async (req, res) => {
   try {
-    const { shareId } = req.params.shareId;
-
-    const itinerary = await Itinerary.findOne(shareId);
+    const { shareId } = req.params; // Corrected parameter destructuring
+    const itinerary = await Itinerary.findOne({ shareId }); // Corrected query object
 
     if (!itinerary) {
       return res.status(404).json({ success: false, message: "Shared itinerary not found" });
