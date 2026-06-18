@@ -16,16 +16,19 @@ const AppContextProvider = (props) => {
     withCredentials: true,
   });
 
+  // Get logged user
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const { data } = await api.get("/api/user/me");
-        if (data.success) {
-          setUser(data.user);
+        const response = await api.get("/api/user/me");
+        if (response.data.success) {
+          setUser(response.data.user);
         }
       } catch (error) {
         setUser(null);
-        toast.error(error.data?.message || "Something went wrong");
+        if (error.response?.status !== 401) {
+          toast.error(error.response?.data?.message || "Something went wrong");
+        }
       }
     };
     loadUser();

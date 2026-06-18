@@ -46,11 +46,15 @@ const createItinerary = async (req, res) => {
 
     const itineraryData = JSON.parse(cleanedResponse);
 
+    // creating and saving generated data in DB
     const newItinerary = await Itinerary.create({
       userId: req.user._id,
       title: itineraryData.title || "Untitled Trip",
       extractedData: itineraryData.extractedData || {},
       itinerary: itineraryData,
+
+      shareId: crypto.randomUUID(),
+
       uploadedFiles: files.map((file) => ({
         fileName: file.originalname,
         fileType: file.mimetype,
@@ -144,35 +148,36 @@ const deleteItinerary = async (req, res) => {
 };
 
 // Shared itinerary
-const getSharedItinerary = async (req, res) => {
+const generateShareLink = async (req, res) => {
   try {
-    const { userId } = req.params.id;
+    const { id } = req.params;
 
-    const itinerary = await Itinerary.findById(userId);
+    const itinerary = await Itinerary.findById(id);
 
     if (!itinerary) {
       return res.status(404).json({ success: false, message: "itinerary not found" });
     }
 
-    // Generating shareId
+    // generate shareId
     if (!itinerary.shareId) {
       itinerary.shareId = crypto.randomUUID();
     }
+
     itinerary.isPublic = true;
 
     await itinerary.save();
 
-    res.json({ shareUrl: `/share/${itinerary.shareId}` });
+    res.status(200).json({ success: true, shareUrl: `/share/${itinerary.shareId}` });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Generate share link
-const generateShareLink = async (req, res) => {
+//  Get shared itinerary
+const getSharedItinerary = async (req, res) => {
   try {
-    const { shareId } = req.params; // Corrected parameter destructuring
-    const itinerary = await Itinerary.findOne({ shareId }); // Corrected query object
+    const { shareId } = req.params;
+    const itinerary = await Itinerary.findOne({ shareId });
 
     if (!itinerary) {
       return res.status(404).json({ success: false, message: "Shared itinerary not found" });
