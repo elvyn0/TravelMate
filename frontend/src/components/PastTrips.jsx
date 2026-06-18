@@ -14,7 +14,9 @@ function PastTrips() {
         setItineraries(response.data.itineraries);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      if (error.response?.status !== 401) {
+        toast.error(error.response?.data?.message || "Something went wrong");
+      }
     }
   };
 
